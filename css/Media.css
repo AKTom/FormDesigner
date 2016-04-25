@@ -1,0 +1,190 @@
+﻿/******************************************/
+/****************竖屏CSS样式****************/
+/******************************************/
+
+@media (orientation: portrait) {
+    body {
+        margin: 0px;
+    }
+
+    #Div_Phone {
+        height: calc(100%);
+        width: 98%;
+    }
+
+    #Div_Main {
+        width: 98%;
+        height: 98%;
+    }
+
+    .UL_Tool li {
+        margin-right: 3px;
+        margin-top: 3px;
+        width: calc(95% - 20px);
+    }
+
+    #Div_Tool {
+        display: none;
+    }
+
+    .ToolItem {
+        padding-left: 15px;
+        line-height: 40px;
+        width: 100%;
+        height: 40px;
+        display: block;
+        position: relative;
+        clear: left;
+    }
+
+    #Div_ControlProperty {
+        width:100%;
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        z-index: 950;
+    }
+}
+
+/******************************************/
+/****************横屏CSS样式****************/
+/******************************************/
+
+/*999-宽度*/
+@media (max-width:999px) and (orientation: landscape) {
+    #Div_Main {
+        width: 980px;
+    }
+
+    #Div_Tool {
+        width: 25%;
+    }
+
+    #Div_Phone {
+    }
+
+    .UL_Tool li {
+        margin-right: 3px;
+        margin-top: 3px;
+        width: calc(95% - 20px);
+    }
+
+    #Div_ControlProperty {
+        width: calc(68% - 400px);
+        height: 700px;
+    }
+
+    .ToolItem {
+        padding-left: 15px;
+        line-height: 40px;
+        width: 100%;
+        height: 40px;
+        display: block;
+        position: relative;
+        clear: left;
+    }
+
+    #Table_ControlProperty tbody th {
+        padding-right: 0px;
+    }
+}
+/*1000+宽度*/
+@media (min-width:1000px) and (orientation: landscape) {
+    #Div_Main {
+        width: 95%;
+    }
+
+    #Div_Tool {
+        width: 25%;
+    }
+
+    #Div_Phone {
+    }
+
+    .UL_Tool li {
+        margin-right: 3px;
+        margin-top: 3px;
+        width: calc(95% - 20px);
+    }
+
+    #Div_ControlProperty {
+        width: calc(68% - 400px);
+        height: 700px;
+    }
+
+    .ToolItem {
+        padding-left: 15px;
+        line-height: 40px;
+        width: 100%;
+        height: 40px;
+        display: block;
+        position: relative;
+        clear: left;
+    }
+
+    #Table_ControlProperty tbody th {
+        padding-right: 10px;
+    }
+}
+/*1200+宽度*/
+@media (min-width:1200px) and (orientation: landscape) {
+    #Div_Main {
+        width: 90%;
+    }
+
+    #Div_Phone {
+    }
+
+    #Div_Tool {
+        width: 30%;
+    }
+
+    .UL_Tool li {
+        margin-right: 10px;
+        margin-top: 10px;
+        width: 45%;
+    }
+
+    #Div_ControlProperty {
+        width: calc(68% - 450px);
+        height: 700px;
+    }
+
+    .ToolItem {
+        width: calc(100% - 15px);
+        padding-left: 15px;
+        line-height: 40px;
+        height: 40px;
+        display: block;
+        position: relative;
+        clear: left;
+    }
+}
+/*1600+宽度*/
+@media (min-width:1600px) and (orientation: landscape) {
+    #Div_Main {
+        width: 80%;
+    }
+
+    #Div_ControlProperty {
+        width: calc(68% - 450px);
+        height: 700px;
+    }
+
+    .UL_Tool li {
+        margin-right: 10px;
+        margin-top: 10px;
+        width: 30%;
+    }
+
+    .ToolItem {
+        width: calc(100% - 15px);
+        padding-left: 15px;
+        line-height: 40px;
+        height: 40px;
+        display: block;
+        position: relative;
+        clear: left;
+    }
+}
