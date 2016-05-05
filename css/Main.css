@@ -1,11 +1,11 @@
 html, body {
     height: 100%;
-    background: -ms-linear-gradient(top, #6DA6CD, #ADD0E4) fixed;
-    background: -moz-linear-gradient(top, #6DA6CD, #ADD0E4) fixed; /*火狐*/
-    background: -webkit-gradient(linear, 0% 0%, 0% 100%,from(#6DA6CD), to(#ADD0E4)) fixed; /*谷歌*/
-    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#6DA6CD), to(#ADD0E4)) fixed; /* Safari 4-5, Chrome 1-9*/
-    background: -webkit-linear-gradient(top, #6DA6CD, #ADD0E4) fixed; /*Safari5.1 Chrome 10+*/
-    background: -o-linear-gradient(top, #6DA6CD, #ADD0E4) fixed; /*Opera 11.10+*/
+    background-color: -ms-linear-gradient(top, #6DA6CD, #ADD0E4) fixed;
+    background-color: -moz-linear-gradient(top, #6DA6CD, #ADD0E4) fixed; /*火狐*/
+    background-color: -webkit-gradient(linear, 0% 0%, 0% 100%,from(#6DA6CD), to(#ADD0E4)) fixed; /*谷歌*/
+    background-color: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#6DA6CD), to(#ADD0E4)) fixed; /* Safari 4-5, Chrome 1-9*/
+    background-color: -webkit-linear-gradient(top, #6DA6CD, #ADD0E4) fixed; /*Safari5.1 Chrome 10+*/
+    background-color: -o-linear-gradient(top, #6DA6CD, #ADD0E4) fixed; /*Opera 11.10+*/
 }
 
 .ToolItem {
@@ -58,9 +58,10 @@ html, body {
     padding-left: 20px;
     text-shadow: 1px 1px 1px rgba(255,255,255,0.6);
 }
-.div_LittleTitle > .fa {
-    margin-right: 5px;
-}
+
+    .div_LittleTitle > .fa {
+        margin-right: 5px;
+    }
 
 /*属性值框*/
 .div_PropertyValue {
@@ -81,11 +82,15 @@ html, body {
 }
 
     .Text_Singer:hover {
-        background-color: rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.4);
     }
 
-    .Text_Singer:hover {
-        background: rgba(255,255,255,0.4);
+    .Text_Singer[disabled] {
+        border: none;
+        border-bottom: 1px dashed rgba(255,255,255,0.4);
+        background-color: transparent;
+        color: black;
+        text-shadow: 1px 1px 5px white;
     }
 
     /*属性单位*/
@@ -103,10 +108,10 @@ html, body {
         text-align: left;
     }
 
-        .Text_Singer:hover ~ .Span_Digit {
-            background: #EEF;
-            color: dodgerblue;
-        }
+    .Text_Singer:hover ~ .Span_Digit {
+        background: #EEF;
+        color: dodgerblue;
+    }
 
     .Text_Singer:focus {
         background-color: transparent;
@@ -215,7 +220,7 @@ html, body {
 #Div_Tool {
     display: inline-block;
     width: 30%;
-    height: 700px;
+    max-height: 700px;
     margin-left: 10px;
     border-radius: 5px;
     border: 1px solid rgba(255,255,255,0.5);
@@ -269,33 +274,34 @@ html, body {
     position: relative;
 }
 
-.UL_Tool[category]:before {
-    content: attr(category);
-    display: block;
-    position: relative;
-    margin-right: 60px;
-    margin-left: -21px;
-    padding-left: 30px;
-    height: 30px;
-    line-height: 30px;
-    font-size: 14px;
-    /*background: rgba(255,255,255,0.6);*/
-    background: -webkit-linear-gradient(left, rgba(255,255,255,1), rgba(255,255,255,0)); /* Safari 5.1 - 6.0 */
-    background: -o-linear-gradient(right, rgba(255,255,255,1), rgba(255,255,255,0)); /* Opera 11.1 - 12.0 */
-    background: -moz-linear-gradient(right, rgba(255,255,255,1), rgba(255,255,255,0)); /* Firefox 3.6 - 15 */
-    background: linear-gradient(to right, rgba(255,255,255,1), rgba(255,255,255,0)); /* 标准的语法 */
-}
-.UL_Tool[category]:after {
-    content: '';
-    display: inline-block;
-    position: absolute;
-    top: 0px;
-    left: -31px;
-    border-left: 12px solid transparent;
-    border-bottom: 0px solid transparent;
-    border-right: 18px solid rgba(255,255,255,1);
-    border-top: 30px solid transparent;
-}
+    .UL_Tool[category]:before {
+        content: attr(category);
+        display: block;
+        position: relative;
+        margin-right: 60px;
+        margin-left: -21px;
+        padding-left: 30px;
+        height: 30px;
+        line-height: 30px;
+        font-size: 14px;
+        /*background: rgba(255,255,255,0.6);*/
+        background: -webkit-linear-gradient(left, rgba(255,255,255,1), rgba(255,255,255,0)); /* Safari 5.1 - 6.0 */
+        background: -o-linear-gradient(right, rgba(255,255,255,1), rgba(255,255,255,0)); /* Opera 11.1 - 12.0 */
+        background: -moz-linear-gradient(right, rgba(255,255,255,1), rgba(255,255,255,0)); /* Firefox 3.6 - 15 */
+        background: linear-gradient(to right, rgba(255,255,255,1), rgba(255,255,255,0)); /* 标准的语法 */
+    }
+
+    .UL_Tool[category]:after {
+        content: '';
+        display: inline-block;
+        position: absolute;
+        top: 0px;
+        left: -31px;
+        border-left: 12px solid transparent;
+        border-bottom: 0px solid transparent;
+        border-right: 18px solid rgba(255,255,255,1);
+        border-top: 30px solid transparent;
+    }
 
     .UL_Tool li {
         list-style: none;
@@ -327,11 +333,11 @@ html, body {
     font-family: 'Microsoft YaHei';
     font-size: 14px;
     color: black;
-    line-height: 50px;
     margin: auto 10px auto 15px;
-    position: relative;
+    position: absolute;
+    top: calc(50% - 10px);
 }
-
+/*标题*/
 .Span_ControlGroup_title_font {
     position: absolute;
     left: 0px;
@@ -344,72 +350,52 @@ html, body {
     color: #888;
     line-height: 25px;
 }
-/*下拉选择框的提示*/
-.Control_Combobox .Span_LineControl_tip_font {
+/*提示*/
+.Span_LineControl_tip_font {
     display: inline-block;
-    width: 100px;
     position: absolute;
-    top: 0px;
-    right: 0px;
-    color: #AAA;
-    font-size: 12px;
-}
-
-    .Control_Combobox .Span_LineControl_tip_font.Combobox_Img {
-        background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAAEhcmxxAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAL5JREFUeNpi+P//PwMyyAUIIDjrP0AAMcIYIAIggBigCjNhGk5AZWwZkJUBBBBYGVTJRaggG0xLPlQAGf9B1mEBxD9hpgAEEAOS04pRjIZKMEKNuI9kAoM5mvmXQILMQHwPSsOAOBC/gnHikXSwIXuXAeoibZgdAAEGdwWSAhuwPyDYHdml6IELAgVYAqERiJmQFaUB8Q8sCtHxXyAugWnSAeIdeBSDQsCNAYv7QAF5Eknhdgw1ODyUDo1UDEMBiAWkJ1xyhBEAAAAASUVORK5CYII=") no-repeat right center;
-    }
-
-    .Control_Combobox .Span_LineControl_tip_font.Font_Right {
-        margin: auto 2px auto auto;
-    }
-/*日期选择框的提示*/
-.Control_DateCombobox .Span_LineControl_tip_font {
-    display: inline-block;
-    width: 100px;
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    color: #AAA;
-    font-size: 12px;
-}
-
-    .Control_DateCombobox .Span_LineControl_tip_font.Combobox_Img {
-        background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAAEhcmxxAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAL5JREFUeNpi+P//PwMyyAUIIDjrP0AAMcIYIAIggBigCjNhGk5AZWwZkJUBBBBYGVTJRaggG0xLPlQAGf9B1mEBxD9hpgAEEAOS04pRjIZKMEKNuI9kAoM5mvmXQILMQHwPSsOAOBC/gnHikXSwIXuXAeoibZgdAAEGdwWSAhuwPyDYHdml6IELAgVYAqERiJmQFaUB8Q8sCtHxXyAugWnSAeIdeBSDQsCNAYv7QAF5Eknhdgw1ODyUDo1UDEMBiAWkJ1xyhBEAAAAASUVORK5CYII=") no-repeat right center;
-    }
-
-    .Control_DateCombobox .Span_LineControl_tip_font.Font_Right {
-        margin: auto 3px auto auto;
-        width: 102px;
-    }
-/*单行输入框的提示*/
-.Control_Text .Span_LineControl_tip_font {
-    display: inline-block;
-    line-height: 48px;
-    position: absolute;
-    top: 2px;
     left: 100px;
     color: #AAA;
     font-size: 12px;
+    top: calc(50% - 8px);
 }
-/*数字输入框的提示*/
-.Control_Number .Span_LineControl_tip_font {
-    display: inline-block;
-    line-height: 48px;
-    position: absolute;
-    top: 2px;
-    left: 100px;
-    color: #AAA;
-    font-size: 12px;
+.BasicControl > .Div_LineControl.Control_Image {
+    height: 50px;
 }
-/*多行输入框的提示*/
-.Control_Textarea .Span_LineControl_tip_font {
+/*图片*/
+.Span_LineControl_Image {
+    height: 100%;
+    border: none;
+}
+.Div_LineControl.Combobox_Img:after {
+    content:'';
     display: inline-block;
-    line-height: 48px;
     position: absolute;
-    top: 2px;
+    width: 12px;
+    height: 12px;
+    top: calc(50% - 6px);
+    right: 20px;
+    background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAAEhcmxxAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAL5JREFUeNpi+P//PwMyyAUIIDjrP0AAMcIYIAIggBigCjNhGk5AZWwZkJUBBBBYGVTJRaggG0xLPlQAGf9B1mEBxD9hpgAEEAOS04pRjIZKMEKNuI9kAoM5mvmXQILMQHwPSsOAOBC/gnHikXSwIXuXAeoibZgdAAEGdwWSAhuwPyDYHdml6IELAgVYAqERiJmQFaUB8Q8sCtHxXyAugWnSAeIdeBSDQsCNAYv7QAF5Eknhdgw1ODyUDo1UDEMBiAWkJ1xyhBEAAAAASUVORK5CYII=") no-repeat right center;
+}
+
+.Span_LineControl_tip_font.Font_Right {
+    margin: auto 2px auto auto;
+    right: 40px;
+    left: inherit;
+}
+
+.Control_Remark .Span_LineControl_title_font {
+    position: relative;
+}
+
+/*输入框的内容*/
+.Span_LineControl_text_font {
+    display: inline-block;
+    position: absolute;
     left: 100px;
-    color: #AAA;
-    font-size: 12px;
+    color: #34495e;
+    font-size: 13px;
+    top: calc(50% - 8px);
 }
 /*表格*/
 .Control_Table {
@@ -527,7 +513,7 @@ html, body {
         cursor: cell;
         font-family: 'Microsoft YaHei';
         width: 100%;
-        height: 50px;
+        min-height: 50px;
         background: white;
         margin: 1px 0px;
         border-top: 1px solid white;
@@ -546,6 +532,12 @@ html, body {
     /*无论任何情况必定显示*/
     .BasicControl.EditFrameShow > .btnDel {
         display: block;
+    }
+    .btnDel > .fa {
+        position: absolute;
+        display: inline-block;
+        top: 0px;
+        left: 3px;
     }
 
     .BasicControl.EditFrameShow > .btnRecovery {
@@ -696,12 +688,14 @@ html, body {
 }
 /*单行输入框样式*/
 .BasicControl > .Control_Text {
+    position: relative;
 }
 /*多行输入框样式*/
 .BasicControl > .Control_Textarea {
 }
 /*明细框无细节*/
 .BasicControl > .Control_Detail {
+    position: relative;
     min-height: 100px;
     max-height: 300px;
     background: #DDEFF3;
@@ -757,6 +751,7 @@ html, body {
     border-bottom: 1px solid #eee;
     border-top: 1px solid #eee;
     min-height: 30px;
+    background-color: rgb(238, 238, 238);
 }
 
     .BasicControl > .Control_Remark > .Span_LineControl_title_font {
@@ -772,3 +767,31 @@ html, body {
     top: calc(50% - 7px);
     right: 10px;
 }
+
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0;
+}
+
+/*半透明样式*/
+.translucent {
+    opacity: 0.4;
+}
+/*有新值的属性框*/
+.ControlNewValue {
+    font-weight: bold;
+}
+/*禁用的样式*/
+.BasicControl.isdisabled {
+    background-color: #DDD;
+    border-color: #DDD;
+    text-shadow: 1px 1px 1px #AAA;
+    box-shadow: 1px 1px 5px rgba(20,20,20,0.2);
+}
+
+    .BasicControl.isdisabled > .Div_LineControl {
+        background-color: #DDD;
+        border-color: #DDD;
+        text-shadow: 1px 1px 1px #AAA;
+        box-shadow: 1px 1px 5px rgba(20,20,20,0.2);
+    }

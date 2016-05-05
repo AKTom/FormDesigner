@@ -1,7 +1,7 @@
 ﻿/// <reference path="jquery-1.8.3-vsdoc.js" />
 /// <reference path="BasicControl.js" />
 
-var phone_x, phone_y, phone_width, phone_height;
+//var phone_x, phone_y, phone_width, phone_height;
 var tcon_x, tcon_y, tcon_width, tcon_height;
 var delbtn_x, delbtn_y, delbtn_width, delbtn_height;
 var drag_x = 0, drag_y = 0;
@@ -12,8 +12,7 @@ var _ChangeSizeCon = null;
 var _ChangeSize_FinalNum = -1;
 //当前改变大小用到改变的按钮类型
 var _ChangeSize_Btn = ChangeSizeBtnType.None;
-//自加ID
-var SysControl_Id = 1;
+
 //正在改变浏览器大小
 var IsBodyChangeSize = false;
 
@@ -38,62 +37,209 @@ Date.prototype.format = function (format) {
     }
     return format;
 }
+//转布尔类型
+window.parseBoolean = function (value) {
+    if (value) {
+        var val = value.toString().toLowerCase()
+        if (val === "false") {
+            return false;
+        } else if (val === "0") {
+            return false;
+        } else return !!value;
+    } else return false;
+}
 
-//元素操作及常用工具类
-ToolHandle = {
+//画布初始化
+function Canvas(element_id) {
+    var element = $("#" + element_id);
+    //画布工作区
+    this.WorkSpace = {
+        //绝对X坐标
+        X: element.offset().left,
+        //绝对Y坐标
+        Y: element.offset().top,
+        //宽度
+        Width: element.innerWidth(),
+        //高度
+        Height: element.innerHeight()
+    };
+    var _elementId = element_id;
+    //自增长Id
+    var SysControl_Id = 0;
     //所有已经拖上去的控件集合
-    List: [],
-    //根据Id值获取元素
-    GetControl: function (id) {
-        for (var i = 0; i < ToolHandle.List.length; i++) {
-            if (ToolHandle.List[i].Id == id) {
-                return ToolHandle.List[i];
+    var _list = [];
+    //（屌炸天的）控件坐标关系图
+    var CoordMap = [];
+    //当前选中的控件
+    var _currentControl = [];
+    //测试
+    this.MyControl = _list;
+    //获取一个新的控件Id
+    this.NewId = function () { return ++SysControl_Id; }
+    //修改画布所在的元素并重新计算坐标（传入HTML的元素Id
+    this.SetElementById = function (element_id) {
+        var _element = document.getElementById(element_id);
+        element = _element;
+        this.WorkSpace.X = _element.offset().left;
+        this.WorkSpace.Y = _element.offset().top;
+        this.WorkSpace.Width = _element.innerWidth();
+        this.WorkSpace.Height = _element.innerHeight();
+    }
+    //创建控件(当前控件,父控件)
+    this.CreateControl = function (con, parent_con) {
+        try {
+            if (!con) { throw ("用于创建的控件不存在。"); }
+            _list.push(new BasicControl(this, con, parent_con));
+            return true;
+        } catch (e) {
+            console.error(e.message);
+            return false;
+        }
+    }
+    //根据Id值获取控件
+    this.GetControl = function (id) {
+        if (!id) throw ("用于查询的Id不能为空。");
+        for (var i = 0; i < _list.length; i++) {
+            if (_list[i].Id == id) {
+                return _list[i];
             }
         }
-    },
-    GetActiveControl: function () {
-        var tempControl = $(".Div_SelectControl").children("[class*='Control_']");
-        if (!tempControl) throw ("未查询到当前激活的控件。");
-        var tempControl_Id = tempControl.attr("index");
-        if (!tempControl_Id) throw ("未查询到当前激活的控件Id。");
-        return ToolHandle.GetControl(tempControl_Id);
-    },
+        return null;
+    }
     //获取某控件的所有子控件
-    GetChildrenControls: function (id) {
+    this.GetChildrenControls = function (id) {
         var t_parent_controls = [];
         if (!id) {
-            for (var o = 0; o < ToolHandle.List.length; o++) {
-                if (ToolHandle.List[o].ParentId == "") {
-                    t_parent_controls.push(ToolHandle.List[o]);
+            for (var o = 0; o < _list.length; o++) {
+                if (_list[o].ParentId == "") {
+                    t_parent_controls.push(_list[o]);
                 }
             }
         } else {
-            for (var o = 0; o < ToolHandle.List.length; o++) {
-                if (id.toString() == ToolHandle.List[o].ParentId.toString()) {
-                    t_parent_controls.push(ToolHandle.List[o]);
+            for (var o = 0; o < _list.length; o++) {
+                if (id.toString() == _list[o].ParentId.toString()) {
+                    t_parent_controls.push(_list[o]);
                 }
             }
         }
         return t_parent_controls;
-    },
-    //删除元素
-    RemoveOfId: function (id) {
-        for (var i = 0; i < ToolHandle.List.length; i++) {
-            if (ToolHandle.List[i].Id == id) {
-                $(ToolHandle.List[i].Me).remove();
-                ToolHandle.List.splice(i, 1);
+    }
+    //根据Id删除元素
+    this.RemoveOfId = function (id) {
+        if (!id) throw ("用于删除的Id不能为空。");
+        for (var i = 0; i < _list.length; i++) {
+            if (_list[i].Id == id) {
+                _canvas.CurrentControl = null;
+                $(_list[i].Me).remove();
+                _list[i].Me = null;
+                _list.splice(i, 1);
             }
         }
-    },
+    }
+    //导出Json格式数据
+    this.ExportJson = function () {
+        var allcontrols = $("#Div_Phone_Main > .BasicControl").children("[class*='Control_']");
+        var controllist = [];
+        for (var i = 0; i < allcontrols.length; i++) {
+            var tempcontrol = this.GetControl(allcontrols.eq(i).attr("index"));
+            var tempobj = {};
+            for (items in tempcontrol) {
+                switch (Object.prototype.toString.call(tempcontrol[items])) {
+                    case "[object Object]":
+                    case "[object Function]":
+                        break;
+                    default:
+                        tempobj[items] = tempcontrol[items];
+                }
+            }
+            for (var property in tempcontrol.Property) {
+                tempobj[property] = tempcontrol.Property[property];
+            }
+            controllist.push(tempobj);
+        }
+        return controllist;
+    }
+    //选择元素
+    this.SelectControl = function (con) {
+        throw ("尚未完成");
+    }
+    //控制画布属性
+    Object.defineProperties(this, {
+        //画布的Id
+        ElementId: {
+            Configurable: false,
+            get: function () { return _list.length; }
+        },
+        //[ReadOnly]获取控件的数量
+        ControlCount: {
+            Configurable: false,
+            get: function () { return _list.length; }
+        },
+        //[ReadOnly]获取坐标关系图
+        CoordMap: {
+            Configurable: false,
+            get: function () { return CoordMap; }
+        },
+        //[ReadOnly]获取新Id
+        MaxId: {
+            Configurable: false,
+            get: function () { return SysControl_Id; }
+        },
+        //[ReadOnly]画布的Id
+        ElementId: {
+            Configurable: false,
+            get: function () { return _elementId; }
+        },
+        //[ReadOnly]画布当前所在元素
+        Element: {
+            Configurable: false,
+            get: function () { return element; }
+        },
+        //当前选中控件
+        CurrentControl: {
+            get: function () { return _currentControl; },
+            set: function (con) {
+                //如果之前有选中一个控件的话，则取消选中
+                if (_currentControl && _currentControl.length > 0) {
+                    for (var i = 0; i < _currentControl.length; i++) {
+                        _currentControl[i].CancelSelect();
+                    }
+                }
+                if (!con || con.length <= 0) {
+                    _currentControl = [];
+                } else {
+                    for (var i = 0; i < con.length; i++) {
+                        con[i].Select();
+                    }
+                    _currentControl = con;
+                }
+                return _currentControl;
+            }
+        }
+    });
+}
+//画布原型
+Canvas.prototype = {
+    valueOf: true,
+    constructor: Canvas
+};
+//[重要]全局画布
+var _canvas = new Canvas("Div_Phone_Main");
+//控制画布属性
+Object.defineProperties(_canvas, {
+});
+
+//元素操作及常用工具类
+var ToolHandle = {
     //点击按钮删除控件
     RemoveConOfButton: function (con) {
         var id = $(con).parent().children(".Div_LineControl,.Div_ControlGroup").attr("index");
-        ToolHandle.RemoveOfId(id);
+        _canvas.RemoveOfId(id);
     },
     //恢复控件体积
     RecoveryOfCon: function (con) {
-        var _index = ToolHandle.GetControl($(con).parent().children(".Div_LineControl,.Div_ControlGroup").eq(0).attr("index"));
-        var _Control1 = _index.CloneMe.children(".Div_LineControl,.Div_ControlGroup");
+        var _index = this.GetControl($(con).parent().children(".Div_LineControl,.Div_ControlGroup").eq(0).attr("index"));
+        //var _Control1 = _index.CloneMe.children(".Div_LineControl,.Div_ControlGroup");
         var _Control2 = $(con).parent().children(".Div_LineControl,.Div_ControlGroup");
         var _ControlType = _Control1[0].classList[1].toLowerCase();
         switch (_ControlType) {
@@ -108,17 +254,12 @@ ToolHandle = {
     GetPanel: function () {
         throw ("还没写好。");
         $(".Div_LineControl,.Div_ControlGroup").each(function () {
-            var x = $(this).offset().left + phone_x;
-            var y = $(this).offset().top + phone_y;
+            var x = $(this).offset().left + _canvas.WorkSpace.X;
+            var y = $(this).offset().top + _canvas.WorkSpace.Y;
             var width = $(this).innerWidth();
             var height = $(this).innerHeight();
             $("body").append("<div class='LocationDiv' style='width:" + width + "px;height:" + height + "px;left:" + x + "px;top:" + y + "px;'></div>");
         });
-    },
-    //更新对象的属性Me
-    UpdateMe: function (obj, c) {
-        obj.CloneMe = obj.Me;
-        obj.Me = c;
     },
     //获取新的GUID
     GetGUID: function () {
@@ -186,8 +327,8 @@ ToolHandle = {
     },
     SetDrag_Up: function (e) {
         if (_ChangeSize_FinalNum != -1 && !!_ChangeSizeCon) {
-            var _con = ToolHandle.GetControl($(_ChangeSizeCon).attr("index"));
-            _con.CloneMe.children(".Div_LineControl,.Div_ControlGroup").css("height", _ChangeSize_FinalNum);
+            var _con = this.GetControl($(_ChangeSizeCon).attr("index"));
+            //_con.CloneMe.children(".Div_LineControl,.Div_ControlGroup").css("height", _ChangeSize_FinalNum);
             _ChangeSize_FinalNum = -1;
             _ChangeSize_Btn = ChangeSizeBtnType.None;
         }
@@ -196,7 +337,6 @@ ToolHandle = {
     //获取元素纵坐标
     GetNodeTop: function (e) {
         var offset = e.offsetTop;
-        //offset += e.clientTop;
         if (e.offsetParent != null) offset += ToolHandle.GetNodeTop(e.offsetParent);
         return offset;
     },
@@ -212,15 +352,16 @@ ToolHandle = {
         if (!IsBodyChangeSize) {
             IsBodyChangeSize = true;
             var _isChangeSize = setTimeout(function () {
-                phone_x = Div_Phone.offset().left;
-                phone_y = Div_Phone.offset().top;
-                phone_width = Div_Phone.innerWidth();
-                phone_height = Div_Phone.innerHeight();
+                var div_canvas = _canvas.Element;
+                _canvas.WorkSpace.X = div_canvas.offset().left;
+                _canvas.WorkSpace.Y = div_canvas.offset().top;
+                _canvas.WorkSpace.Width = div_canvas.innerWidth();
+                _canvas.WorkSpace.Height = div_canvas.innerHeight();
 
-                delbtn_x = phone_x + phone_width / 4;
-                delbtn_y = phone_y + 10;
-                delbtn_width = Div_DelControl.innerWidth();
-                delbtn_height = Div_DelControl.innerHeight();
+                //delbtn_x = phone_x + phone_width / 4;
+                //delbtn_y = phone_y + 10;
+                //delbtn_width = Div_DelControl.innerWidth();
+                //delbtn_height = Div_DelControl.innerHeight();
 
                 IsBodyChangeSize = false;
                 if (!!_isChangeSize) {
@@ -229,29 +370,6 @@ ToolHandle = {
                 }
             }, "300");
         }
-    },
-    //导出Json格式数据
-    ExportJson: function () {
-        var allcontrols = $("#Div_Phone_Main > .BasicControl").children("[class*='Control_']");
-        var controllist = [];
-        for (var i = 0; i < allcontrols.length; i++) {
-            var tempcontrol = ToolHandle.GetControl(allcontrols.eq(i).attr("index"));
-            var tempobj = {};
-            for (items in tempcontrol) {
-                switch (Object.prototype.toString.call(tempcontrol[items])) {
-                    case "[object Object]":
-                    case "[object Function]":
-                        break;
-                    default:
-                        tempobj[items] = tempcontrol[items];
-                }
-            }
-            for (var property in tempcontrol.Property) {
-                tempobj[property] = tempcontrol.Property[property];
-            }
-            controllist.push(tempobj);
-        }
-        return controllist;
     },
     /*根据模板获取变量*/
     GetTemplate: function (html, options) {
@@ -268,41 +386,47 @@ ToolHandle = {
         add(html.substr(cursor, html.length - cursor));
         code += 'return r.join("");';
         return new Function(code.replace(/[\r\t\n]/g, '')).apply(options);
+    },
+    //根据变量类型返回对应的值
+    GetValue: function (obj, propertyType) {
+        _item = null;
+        switch (propertyType) {
+            case PropertyDataType.Int:
+                _item = parseInt(obj);
+                break;
+            case PropertyDataType.Float:
+                _item = parseFloat(obj);
+                break;
+            case PropertyDataType.Boolean:
+                _item = parseBoolean(obj);
+                break;
+            default:
+                _item = obj;
+                break;
+        }
+        return _item;
+    },
+    //继承基础控件
+    InheritPrototype: function (subClass) {
+        var prototype = Object.create(BasicControl.prototype); //创建对象
+        prototype.constructor = subClass; //增强对象
+        subClass.prototype = prototype; //指定对象
     }
 };
 
 $(function () {
-
     $("#Div_Phone_Main").on('mouseover', ".BasicControl", function (e) {
         $(this).addClass("EditFrameShow");
         e.stopPropagation();
     }).on('mouseout', ".BasicControl", function (e) {
         $(this).removeClass("EditFrameShow");
         e.stopPropagation();
-    }).on('mousedown', ".BasicControl", function (e) {
-        for (var i = 0; i < ToolHandle.List.length; i++) {
-            var meid = $(this).children("[class*='Control_']").attr("index");
-            if (ToolHandle.List[i].Id != meid) {
-                ToolHandle.List[i].Me.removeClass("Div_SelectControl");
-            } else {
-                $(this).addClass("Div_SelectControl");
-                var _property = ToolHandle.GetControl(meid);
-
-                $(".div_PropertyPanel").html(ToolHandle.GetTemplate('<a href="#"><%this.Id%></a>', _property));
-            }
-        }
-
-        e.stopPropagation();
     });
 
     $("#Div_Phone").on('mousedown', "#Div_Phone_Main", function (e) {
-        for (var i = 0; i < ToolHandle.List.length; i++) {
-            ToolHandle.List[i].Me.removeClass("Div_SelectControl");
-        }
+        _canvas.CurrentControl = [];
         e.stopPropagation();
     });
-
-
 
     //$("#BugDiv").resizable({
     //    grid: [0, 10],
@@ -311,17 +435,11 @@ $(function () {
 
     //$(document.body).mousedown(function () { ToolControl.SetSelectControl(null); });
 
-    Div_Phone = $('#Div_Phone_Main');
-    phone_x = Div_Phone.offset().left;
-    phone_y = Div_Phone.offset().top;
-    phone_width = Div_Phone.innerWidth();
-    phone_height = Div_Phone.innerHeight();
-
-    Div_DelControl = $('#Div_DeleteControl');
-    delbtn_x = phone_x + phone_width / 4;
-    delbtn_y = phone_y + 10;
-    delbtn_width = Div_DelControl.innerWidth();
-    delbtn_height = Div_DelControl.innerHeight();
+    //Div_DelControl = $('#Div_DeleteControl');
+    //delbtn_x = phone_x + phone_width / 4;
+    //delbtn_y = phone_y + 10;
+    //delbtn_width = Div_DelControl.innerWidth();
+    //delbtn_height = Div_DelControl.innerHeight();
 
 
     var TempDragControl = null;
@@ -333,7 +451,7 @@ $(function () {
     var OldParentControl = null;
     //当前拖拽的控件
     var Me = null;
-    var SplitHr = $("#SplitHr").clone();
+    var SplitHr = $("#SplitHr").clone(true);
     //所有第一级控件
     var main_controls = [];
 
@@ -348,7 +466,7 @@ $(function () {
         opacity: 0.6,
         zIndex: 999,
         helper: function (e) {
-            var temp_e = $("#" + e.currentTarget.classList[1].toString().substr(7)).clone();
+            var temp_e = $("#" + e.currentTarget.classList[1].toString().substr(7)).clone(true);
             temp_e.addClass("GrayBackground");
             temp_e.css({
                 width: "100px",
@@ -361,55 +479,70 @@ $(function () {
         cursorAt: { top: 20, left: 50 },
         distance: 10,
         start: function (e) {
-            ToolControl.SetSelectControl(null);
-            $(e.target).addClass("BlurControl");
             IsDrag = true;
-            for (var i = 0; i < ToolHandle.List.length; i++) {
-                if (ToolHandle.List[i].Id == $(e.currentTarget).attr("index")) {
-                    TempDragControl = ToolHandle.List[i].Me.clone();
-                    TempDragControl.children(".ToolItem").remove();
-                    OldParentControl = ToolHandle.GetControl(ToolHandle.List[i].ParentId);
-                    //TempDragControl = ToolHandle.List[i].CloneMe;
-                    break;
-                }
-            }
+
+            Me = _canvas.CurrentControl;
+            Me[0].Me.children().addClass("BlurControl");
+            TempDragControl = Me[0].Me.clone();
+            TempDragControl.children(".ToolItem").remove();
+            if (Me.ParentId) OldParentControl = _canvas.GetControl(Me.ParentId);
+
+            //for (var i = 0; i < _canvas.ControlCount; i++) {
+            //    if (_canvas._list[i].Id == $(e.currentTarget).attr("index")) {
+            //        TempDragControl = _canvas._list[i].Me.clone(true);
+            //        TempDragControl.children(".ToolItem").remove();
+            //        OldParentControl = _canvas.GetControl(_canvas._list[i].ParentId);
+            //        break;
+            //    }
+            //}
             TempLocationType = LocationType.None;
             TempParentControl = null;
-            Me = ToolHandle.GetControl($(e.target).attr("index"));
+            main_controls = _canvas.GetChildrenControls();
         }, stop: function (e) {
             if (IsDrag) {
                 if (TempLocationType == LocationType.Delete) {
-                    Me.Me.remove();
-                    ToolHandle.RemoveOfId(Me.Id);
+                    Me[0].Me.remove();
+                    _canvas.RemoveOfId(Me[0].Id);
                 } else {
-                    Me.Me.remove();
+                    Me[0].Me.remove();
                     $(SplitHr).after(TempDragControl);
                     SplitHr.remove();
                     TempDragControl.children().removeClass("BlurControl");
-                    TempDragControl.removeClass("EditFrameShow");
+                    //TempDragControl.removeClass("EditFrameShow");
 
+                    TempDragControl[0].onmousedown = function (e) {
+                        _canvas.CurrentControl = [_canvas.GetControl($(this).children("[class*=Control_]").attr("index"))];
+                        e.stopPropagation();
+                    };
                     TempDragControl.children().eq(0).draggable(DefaultDraggable);
-                    var _con = ToolHandle.GetControl(TempDragControl.children().eq(0).attr("index"));
+
+                    //获取当前选中的控件（不太确定这个方法是不是靠谱，可能会出现一些问题，比如拖拽的时候没有选中当前控件，但是因为能提升效率，先这样用着看看吧
+                    var _con = _canvas.GetControl(Me[0].Id);
+
                     _con.Me = TempDragControl;
-                    var _con_controls = ToolHandle.GetChildrenControls(_con.Id);
+                    var _con_controls = _canvas.GetChildrenControls(_con.Id);
                     for (var i = 0; i < _con_controls.length; i++) {
-                        _con_controls[i].Me = TempDragControl.find("[index='" + _con_controls[i].Id + "']");
-                        _con_controls[i].Me.draggable(DefaultDraggable);
-                        _con_controls[i].Me = _con_controls[i].Me.parent();
+                        _con_controls[i].Me = TempDragControl.find("[index='" + _con_controls[i].Id + "']").parent();
+                        _con_controls[i].Me[0].onmousedown = function (e) {
+                            _canvas.CurrentControl = [_canvas.GetControl($(this).children("[class*=Control_]").attr("index"))];
+                            e.stopPropagation();
+                        };
+                        _con_controls[i].Me.children("[class*='Control_']").draggable(DefaultDraggable);
                     }
+
                     //如果自己的父控件不等于当前的父控件的话
                     //if (!TempParentControl && OldParentControl) {
-                    //    ToolHandle.GetControl($(e.target).attr("index")).ParentId = !TempParentControl ? "" : TempParentControl.Id;
-                    //var _oldcon_controls = ToolHandle.GetChildrenControls(OldParentControl.Id);
-                    //for (var i = 0; i < _oldcon_controls.length; i++) {
-                    //    if (_oldcon_controls[i].Id == _con.Id) {
-                    //        _oldcon_controls[i].ParentId = !TempParentControl ? "" : TempParentControl.Id;
+                    //    _canvas.GetControl($(e.target).attr("index")).ParentId = !TempParentControl ? "" : TempParentControl.Id;
+                    //    var _oldcon_controls = _canvas.GetChildrenControls(OldParentControl.Id);
+                    //    for (var i = 0; i < _oldcon_controls.length; i++) {
+                    //        if (_oldcon_controls[i].Id == _con.Id) {
+                    //            _oldcon_controls[i].ParentId = !TempParentControl ? "" : TempParentControl.Id;
+                    //        }
                     //    }
-                    //}
                     //}
                     Me.ParentId = !TempParentControl ? "" : TempParentControl.Id;
                     //if (TempParentControl) {
-                    //    var _tempcon_controls = ToolHandle.GetChildrenControls(TempParentControl.Id);
+                    //    var _tempcon_controls = _canvas.GetChildrenControls(TempParentControl.Id);
                     //    _con.ParentId = TempParentControl.Id;
                     //    for (var i = 0; i < _tempcon_controls.length; i++) {
                     //        _tempcon_controls[i].Me = _con.Me;
@@ -423,15 +556,14 @@ $(function () {
                 IsDrag = false;
 
             } else {
-                $(this).children().removeClass("BlurControl");
-                $(this).removeClass("EditFrameShow");
+                //$(this).children().removeClass("BlurControl");
+                //$(this).removeClass("EditFrameShow");
             }
-            //重新计算出所有第一级控件
-            ToolHandle.GetChildrenControls();
         }, drag: function (e) {
             if (IsDrag) {
                 var Page_X = e.pageX, Page_Y = e.pageY;
-                if (Page_X > phone_x && Page_Y > phone_y - 20 && Page_X < phone_x + phone_width && Page_Y < phone_y + phone_height) {
+                if (Page_X > _canvas.WorkSpace.X && Page_Y > _canvas.WorkSpace.Y - 20
+                    && Page_X < _canvas.WorkSpace.X + _canvas.WorkSpace.Width && Page_Y < _canvas.WorkSpace.Y + _canvas.WorkSpace.Height) {
                     TempLocationType = LocationType.None;
                     //移动到内部的时候
                     //if (Page_X >= delbtn_x && Page_Y >= delbtn_y && Page_X <= delbtn_x + delbtn_width && Page_Y <= delbtn_y + delbtn_height) {
@@ -442,11 +574,11 @@ $(function () {
                     //} else {
                     //    if (Div_DelControl.hasClass("DeleteControl_Ok")) Div_DelControl.removeClass("DeleteControl_Ok");
                     //}
-                    if (ToolHandle.List.length == 0) {
-                        $(Div_Phone).append(SplitHr);
+                    if (_canvas.ControlCount == 0) {
+                        $(_canvas.Element).append(SplitHr);
                     } else {
                         tempmax_y = 0;
-                        tempmin_y = phone_y;
+                        tempmin_y = _canvas.WorkSpace.Y;
                         TempParentControl = null;
                         for (var i = 0; i < main_controls.length; i++) {
                             tcon_x = main_controls[i].Me.offset().left;
@@ -458,14 +590,14 @@ $(function () {
                             //光标在元素内部
                             if (Page_Y > tcon_y && Page_Y < tcon_y + tcon_height + 12) {
                                 //控件内能容纳其他控件且不是自己
-                                if (main_controls[i].HasControl && main_controls[i].Id != Me.Id && !Me.IsRootControl) {
+                                if (main_controls[i].HasControl && main_controls[i].Id != Me[0].Id && !Me.IsRootControl) {
                                     //
                                     if (Page_Y > tcon_y + 10 && Page_Y < tcon_y + tcon_height + 12) {
                                         //设置父控件
                                         TempParentControl = main_controls[i];
                                         tempmax_y_2 = 0;
                                         tempmin_y_2 = 0;
-                                        parent_controls = ToolHandle.GetChildrenControls(main_controls[i].Id);
+                                        parent_controls = _canvas.GetChildrenControls(main_controls[i].Id);
 
                                         //如果没有子控件就直接加到父控件内部
                                         if (parent_controls == 0) {
@@ -530,11 +662,11 @@ $(function () {
                             } else if (i == main_controls.length - 1) {
                                 if (Page_Y > tempmax_y) {
                                     SplitHr.remove();
-                                    Div_Phone.append(SplitHr);
+                                    _canvas.Element.append(SplitHr);
                                     break;
                                 } else if (Page_Y < tempmin_y) {
                                     SplitHr.remove();
-                                    Div_Phone.prepend(SplitHr);
+                                    _canvas.Element.prepend(SplitHr);
                                     break;
                                 } else {
                                     //debugger;
@@ -568,7 +700,7 @@ $(function () {
         cursor: "cell",
         cursorAt: { top: 20, left: 50 },
         helper: function (e) {
-            var temp_e = $(e.currentTarget).clone();
+            var temp_e = $(e.currentTarget).clone(true);
             //temp_e.removeClass("ui-draggable");
             //temp_e.removeClass("ui-draggable-handle");
             temp_e.css({
@@ -581,22 +713,22 @@ $(function () {
         },
         start: function (e) {
             IsDrag = true;
-            TempDragControl = $("#TempTool" + e.currentTarget.id).parent().clone();
-            SplitHr = $("#SplitHr").clone();
+            TempDragControl = $("#TempTool" + e.currentTarget.id).parent().clone(true);
+            SplitHr = $("#SplitHr").clone(true);
             TempParentControl = null;
+            main_controls = _canvas.GetChildrenControls();
         },
         drag: function (e) {
             var Page_X = e.pageX, Page_Y = e.pageY;
             if (IsDrag) {
                 //光标在内部的时候
-                if (Page_X > phone_x && Page_Y > phone_y - 20 && Page_X < phone_x + phone_width && Page_Y < phone_y + phone_height) {
-                    if (ToolHandle.List.length == 0) {
-                        $(Div_Phone).append(SplitHr);
+                if (Page_X > _canvas.WorkSpace.X && Page_Y > _canvas.WorkSpace.Y - 20 && Page_X < _canvas.WorkSpace.X + _canvas.WorkSpace.Width && Page_Y < _canvas.WorkSpace.Y + _canvas.WorkSpace.Height) {
+                    if (_canvas.ControlCount == 0) {
+                        $(_canvas.Element).append(SplitHr);
                     } else {
                         tempmax_y = 0;
-                        tempmin_y = phone_y;
+                        tempmin_y = _canvas.WorkSpace.Y;
                         TempParentControl = null;
-                        main_controls = ToolHandle.GetChildrenControls();
                         for (var i = 0; i < main_controls.length; i++) {
                             tcon_x = main_controls[i].Me.offset().left;
                             tcon_y = main_controls[i].Me.offset().top;
@@ -614,7 +746,7 @@ $(function () {
                                         TempParentControl = main_controls[i].Id.toString();
                                         tempmax_y_2 = 0;
                                         tempmin_y_2 = 0;
-                                        parent_controls = ToolHandle.GetChildrenControls(main_controls[i].Id);
+                                        parent_controls = _canvas.GetChildrenControls(main_controls[i].Id);
 
                                         //如果没有子控件就直接加到父控件内部
                                         if (parent_controls == 0) {
@@ -679,11 +811,11 @@ $(function () {
                             } else if (i == main_controls.length - 1) {
                                 if (Page_Y > tempmax_y) {
                                     SplitHr.remove();
-                                    Div_Phone.append(SplitHr);
+                                    _canvas.Element.append(SplitHr);
                                     break;
                                 } else if (Page_Y < tempmin_y) {
                                     SplitHr.remove();
-                                    Div_Phone.prepend(SplitHr);
+                                    _canvas.Element.prepend(SplitHr);
                                     break;
                                 } else {
                                     //debugger;
@@ -696,7 +828,7 @@ $(function () {
                 } else { TempLocationType = LocationType.None; TempParentControl = null; }
             }
             if (IsDrag) {
-                if (IsOver && (Page_X < phone_x || Page_Y < phone_y - 20 || Page_X > phone_x + phone_width || Page_Y > phone_y + phone_height)) {
+                if (IsOver && (Page_X < _canvas.WorkSpace.X || Page_Y < _canvas.WorkSpace.Y - 20 || Page_X > _canvas.WorkSpace.X + _canvas.WorkSpace.Width || Page_Y > _canvas.WorkSpace.Y + _canvas.WorkSpace.Height)) {
                     SplitHr.remove();
                     IsOver = false;
                 } else {
@@ -707,12 +839,11 @@ $(function () {
             if (IsOver && IsDrag) {
                 $(SplitHr).after(TempDragControl);
                 SplitHr.remove();
-                TempDragControl.children(".Div_LineControl,.Div_ControlGroup").removeAttr("id");
-                TempDragControl.children(".Div_LineControl,.Div_ControlGroup").attr("index", SysControl_Id);
 
-                var _newcon = new BasicControl(TempDragControl, TempParentControl);
-                ToolHandle.List.push(_newcon);
-                TempDragControl.children().eq(0).draggable(DefaultDraggable);
+                //创建控件
+                _canvas.CreateControl(TempDragControl, TempParentControl);
+
+                TempDragControl.children("[class*='Control_']").draggable(DefaultDraggable);
 
                 //if (TempParentControl) {
                 //    TempParentControl.Controls.push(_newcon);
@@ -728,8 +859,6 @@ $(function () {
             } else {
                 //alert("IsOver:" + IsOver + ",IsDrag:" + IsDrag);
             }
-            //重新计算出所有第一级控件
-            ToolHandle.GetChildrenControls();
         }
     });
     //****************************************************
